@@ -33,6 +33,7 @@ export class DashboardComponent {
   users: number;
   monitored: number;
   devicesIoT: number;
+  medicalDevices: number = 0;
   dialog = inject(MatDialog);
   tenants: any[];
   dataTable: any[] = [];
@@ -66,7 +67,8 @@ export class DashboardComponent {
     this.getTenantMembers(this.tenants);
     this.getMonitoredPeople(this.tenants);
     this.getIoTDevicesByTenant(this.tenants);
-    this.createDataForTable(this.tenants)
+    this.createDataForTable(this.tenants);
+    this.getMedicalDevices(this.tenants)
     this.cdr.detectChanges();
   }
 
@@ -308,5 +310,94 @@ export class DashboardComponent {
     if (this.paginator._intl) {
       this.paginator._intl.itemsPerPageLabel = "Cuentas por página";
     }
+  }
+
+  /**
+   * Function that return the medical devices a of a tenant
+   */
+  private async getMedicalDevices(tenants: any) {
+    if (this.user.data.user.role === "service_role") {
+      tenants.map(async (tenant: any) => {
+        try {
+          const { data, error } = await this._supabaseService.getMedicalDevicesByTenant(tenant.tenant_id);
+          if (error) {
+            throw new Error(`Error al obtener los dispositivos IoT del tenant ${error.message}`);
+          }
+          let medicalDevices2;
+          let allMedicalDevices = [];
+          (data != null) ? medicalDevices2 = data : medicalDevices2 = [];
+
+          for (let i = 0; i < medicalDevices2.length; i++) {
+            const medicalDevice = medicalDevices2[i];
+            const newMedicalDevice = {
+              id: medicalDevice.medical_device_id,
+              type: medicalDevice.device_type_name,
+              status: OPTIONS[Math.floor(Math.random() * OPTIONS.length)],
+              lastMeasurement: medicalDevice.last_measurement,
+              lastMeasurementDate: medicalDevice.measurement_date,
+              name: medicalDevice.first_name + ' ' + medicalDevice.last_name,
+            };
+            allMedicalDevices.push(newMedicalDevice);
+          }
+          this.medicalDevices += this.getUniqueMedicalDevices(allMedicalDevices).length;
+        } catch (error: any) {
+          console.error('Error en getMedicalDevices:', error.message || error);
+        }
+      })
+
+    } else {
+      try {
+        const { data, error } = await this._supabaseService.getMedicalDevicesByTenant(tenants[0].tenant_id);
+        if (error) {
+          throw new Error(`Error al obtener los dispositivos IoT del tenant ${error.message}`);
+        }
+        let medicalDevices;
+        let allMedicalDevices = [];
+        (data != null) ? medicalDevices = data : medicalDevices = [];
+
+        for (let i = 0; i < medicalDevices.length; i++) {
+          const medicalDevice = medicalDevices[i];
+          const newMedicalDevice = {
+            id: medicalDevice.medical_device_id,
+            type: medicalDevice.device_type_name,
+            status: OPTIONS[Math.floor(Math.random() * OPTIONS.length)],
+            lastMeasurement: medicalDevice.last_measurement,
+            lastMeasurementDate: medicalDevice.measurement_date,
+            name: medicalDevice.first_name + ' ' + medicalDevice.last_name,
+          };
+          allMedicalDevices.push(newMedicalDevice);
+          this.medicalDevices = this.getUniqueMedicalDevices(allMedicalDevices).length;
+
+        }
+      } catch (error: any) {
+        console.error('Error en getMedicalDevices:', error.message || error);
+      }
+    }
+
+
+  }
+
+  /**
+   * Function that returns an array with unique values
+   */
+  private getUniqueMedicalDevices(medicalDevices: any) {
+    const uniqueObjectsMap = new Map<string, any>();
+
+    medicalDevices.forEach((medicalDevice: any) => {
+      const existingObj = uniqueObjectsMap.get(medicalDevice.id);
+
+      if (existingObj) {
+        const currentDate = new Date(medicalDevice.lastMeasurementDate);
+        const existingDate = new Date(existingObj.lastMeasurementDate);
+
+        if (currentDate > existingDate) {
+          uniqueObjectsMap.set(medicalDevice.id, medicalDevice);
+        }
+      } else {
+        uniqueObjectsMap.set(medicalDevice.id, medicalDevice);
+      }
+    });
+
+    return Array.from(uniqueObjectsMap.values());
   }
 }
