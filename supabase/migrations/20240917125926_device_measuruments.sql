@@ -10,8 +10,13 @@ BEGIN
     return (select json_agg(
                            json_build_object(
                                    'measurement_date', dm.timestamp ,
-                                   'last_measurement', concat(dm.measurement_value,' ',dm.unit)  ,
-                                   'device_type_name', dt.name
+                                   'last_measurement', concat(dm.measurement_value,' ',dm.unit)  ,                                   
+                                   'device_type_id', dt.id,
+                                   'device_type_name', dt.name,
+                                   'device_user_id', du.id,                                
+                                   'first_name', du.first_name,
+                                   'last_name', du.last_name,
+                                   'medical_device_id', md.medical_device_id
                                )
                        )
             from public.device_measurements dm
