@@ -12,27 +12,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../../../services/supabase.service';
 
-const MEDICALDEVICES = [
-  {
-    type: "Pulsera",
-    status: "On",
-    lastMeasurement: "150",
-    lastMeasurementDate: new Date()
-  },
-  {
-    type: "Glucometro",
-    status: "Off",
-    lastMeasurement: "20/10",
-    lastMeasurementDate: new Date()
-  },
-  {
-    type: "Collar",
-    status: "Suspended",
-    lastMeasurement: "210",
-    lastMeasurementDate: new Date()
-  },
-
-];
 
 const OPTIONS: string[] = [
   'On', 'Off', 'Suspended'
@@ -46,7 +25,7 @@ const OPTIONS: string[] = [
   styleUrls: ['./see-tenant-dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SeeTenantDashboardComponent implements AfterViewInit, OnInit {
+export class SeeTenantDashboardComponent implements OnInit {
   id: any;
   user: any;
   users: any = [];
@@ -83,7 +62,6 @@ export class SeeTenantDashboardComponent implements AfterViewInit, OnInit {
     private _route: ActivatedRoute,
     private _supabaseService: SupabaseService,
   ) {
-    this.dataSourceMedicalDevices = new MatTableDataSource(MEDICALDEVICES);
   }
   async ngOnInit() {
     this.user = await this._supabaseService.getUserSession();
@@ -94,11 +72,6 @@ export class SeeTenantDashboardComponent implements AfterViewInit, OnInit {
     await this.getMedicalDevices(this.id);
   }
 
-
-  ngAfterViewInit() {
-    this.dataSourceMedicalDevices.paginator = this.medicalDevicesPaginator;
-    this.dataSourceMedicalDevices.sort = this.medicalDevicesSort;
-  }
 
   /**
    * Function that allows the person to filter in the users table and display the data related to the filter
@@ -263,10 +236,10 @@ export class SeeTenantDashboardComponent implements AfterViewInit, OnInit {
       let allMedicalDevices = [];
       (data != null) ? medicalDevices = data : medicalDevices = [];
 
-      for (let i = 0; i < data.length; i++) {
-        const medicalDevice = data[i];
+      for (let i = 0; i < medicalDevices.length; i++) {
+        const medicalDevice = medicalDevices[i];
         const newMedicalDevice = {
-          id: medicalDevice.device_type_id,
+          id: medicalDevice.medical_device_id,
           type: medicalDevice.device_type_name,
           status: OPTIONS[Math.floor(Math.random() * OPTIONS.length)],
           lastMeasurement: medicalDevice.last_measurement,
